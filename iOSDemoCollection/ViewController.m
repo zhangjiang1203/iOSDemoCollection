@@ -8,7 +8,7 @@
 
 #import "ViewController.h"
 #import "ZJCarInfoView.h"
-#import "EnergyPieView.h"
+//#import "EnergyPieView.h"
 
 @interface ViewController ()
 
@@ -26,7 +26,7 @@
     ZJCarInfoView *layer = [[ZJCarInfoView alloc]initWithFrame:CGRectZero];
     layer.frame = self.view.bounds;
     [self.view addSubview:layer];
-    layer.battery = 90;
+    layer.battery = 300;
 
     layer.mileage = 0.8;
     //    [UIView animateWithDuration:1.5 animations:^{

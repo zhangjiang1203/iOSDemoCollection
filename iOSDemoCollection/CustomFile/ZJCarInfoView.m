@@ -51,7 +51,10 @@
 -(void)setMileage:(CGFloat)mileage{
     _mileage = mileage;
 //    self.topLayer.strokeEnd = _mileage;
-     [self setCircleShowPresent];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self setCircleShowPresent:self.mileage];
+    });
+//     [self setCircleShowPresent];
 }
 
 
@@ -113,9 +116,40 @@
 - (void)drawRect:(CGRect)rect {
         
     [super drawRect:rect];
-    // Drawing code
-    //一个不透明类型的Quartz 2D绘画环境,相当于一个画布,你可以在上面任意绘画
-    CGContextRef context = UIGraphicsGetCurrentContext();
+//    // Drawing code
+//    //一个不透明类型的Quartz 2D绘画环境,相当于一个画布,你可以在上面任意绘画
+//    CGContextRef context = UIGraphicsGetCurrentContext();
+//
+//    const CGFloat *startColorComponents = CGColorGetComponents(KStartColor.CGColor); //RGB components
+//    const CGFloat *endColorComponents = CGColorGetComponents(KEndColor.CGColor); //RGB components
+//
+//    CGFloat R, G, B, A;
+//    //多个小扇形构造渐变的大扇形
+//    for (int i = 0; i<= self.battery; i++) {
+//        CGFloat ratio = i/self.battery;
+//        R = startColorComponents[0] - (startColorComponents[0] - endColorComponents[0])*ratio;
+//        G = startColorComponents[1] - (startColorComponents[1] - endColorComponents[1])*ratio;
+//        B = startColorComponents[2] - (startColorComponents[2] - endColorComponents[2])*ratio;
+//        A = startColorComponents[3] - (startColorComponents[3] - endColorComponents[3])*ratio;
+//        //画扇形，也就画圆，只不过是设置角度的大小，形成一个扇形
+//        UIColor *aColor = [UIColor colorWithRed:R green:G blue:B alpha:A];
+//
+//        CGContextSetFillColorWithColor(context, aColor.CGColor);//填充颜色
+//        CGContextSetLineWidth(context, 0);//线的宽度
+//        //以self.radius为半径围绕圆心画指定角度扇形
+//        CGContextMoveToPoint(context, self.center.x, self.center.y);
+//        CGContextAddArc(context, self.center.x, self.center.y, KInnerRadio,  i * M_PI / 180-M_PI_2, (i-1) * M_PI / 180+M_PI*2-M_PI_2, YES);
+//        CGContextClosePath(context);
+//        CGContextDrawPath(context, kCGPathFillStroke); //绘制路径
+//    }
+    if (self.topLayer == nil) {
+        [self addOutCircle];
+        [self customMyPath];
+    }
+    
+}
+
+- (void)customMyPath{
     
     const CGFloat *startColorComponents = CGColorGetComponents(KStartColor.CGColor); //RGB components
     const CGFloat *endColorComponents = CGColorGetComponents(KEndColor.CGColor); //RGB components
@@ -128,26 +162,34 @@
         G = startColorComponents[1] - (startColorComponents[1] - endColorComponents[1])*ratio;
         B = startColorComponents[2] - (startColorComponents[2] - endColorComponents[2])*ratio;
         A = startColorComponents[3] - (startColorComponents[3] - endColorComponents[3])*ratio;
-        //画扇形，也就画圆，只不过是设置角度的大小，形成一个扇形
         UIColor *aColor = [UIColor colorWithRed:R green:G blue:B alpha:A];
+
+        CAShapeLayer *layer1 = [CAShapeLayer layer];
+        layer1.fillColor = aColor.CGColor;
+        layer1.strokeColor = [UIColor clearColor].CGColor;
+        layer1.lineWidth = 0;
+        layer1.strokeStart = 0;
+        layer1.strokeEnd = 0;
+        layer1.bounds = self.bounds;
+        layer1.position = self.center;
+        layer1.lineJoin = @"bevel";
         
-        CGContextSetFillColorWithColor(context, aColor.CGColor);//填充颜色
-        CGContextSetLineWidth(context, 0);//线的宽度
-        //以self.radius为半径围绕圆心画指定角度扇形
-        CGContextMoveToPoint(context, self.center.x, self.center.y);
-        CGContextAddArc(context, self.center.x, self.center.y, KInnerRadio,  i * M_PI / 180-M_PI_2, (i-1) * M_PI / 180+M_PI*2-M_PI_2, YES);
-        CGContextClosePath(context);
-        CGContextDrawPath(context, kCGPathFillStroke); //绘制路径
+        UIBezierPath *path = [UIBezierPath bezierPath];
+        [path addArcWithCenter:self.center radius:KInnerRadio startAngle:i*M_PI/180.0-M_PI_2 endAngle: (i+1)*M_PI/180.0-M_PI_2 clockwise:YES];
+        [path addLineToPoint:self.center];
+        [self setCircleShowPresent:1];
+        
+        layer1.path = [path CGPath];
+        [self.layer addSublayer:layer1];
     }
-    [self addOutCircle];
 }
 
--(void) setCircleShowPresent{
+-(void)setCircleShowPresent:(CGFloat)end{
     CABasicAnimation *pathAnima = [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
     pathAnima.duration = 3.0f;
     pathAnima.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
     pathAnima.fromValue = [NSNumber numberWithFloat:0.0f];
-    pathAnima.toValue = [NSNumber numberWithFloat:self.mileage];
+    pathAnima.toValue = [NSNumber numberWithFloat:end];
     pathAnima.fillMode = kCAFillModeForwards;
     pathAnima.removedOnCompletion = NO;
     [self.topLayer addAnimation:pathAnima forKey:@"strokeEndAnimation"];

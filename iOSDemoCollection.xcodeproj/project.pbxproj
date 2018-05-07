@@ -14,7 +14,6 @@
 		884C74F5209FFEF1000529DF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 884C74F3209FFEF1000529DF /* LaunchScreen.storyboard */; };
 		884C74F8209FFEF1000529DF /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 884C74F7209FFEF1000529DF /* main.m */; };
 		884C7501209FFF1D000529DF /* ZJCarInfoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 884C74FF209FFF1D000529DF /* ZJCarInfoView.m */; };
-		884C750420A0110D000529DF /* EnergyPieView.m in Sources */ = {isa = PBXBuildFile; fileRef = 884C750320A0110C000529DF /* EnergyPieView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,8 +29,6 @@
 		884C74F7209FFEF1000529DF /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		884C74FF209FFF1D000529DF /* ZJCarInfoView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZJCarInfoView.m; sourceTree = "<group>"; };
 		884C7500209FFF1D000529DF /* ZJCarInfoView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZJCarInfoView.h; sourceTree = "<group>"; };
-		884C750220A0110C000529DF /* EnergyPieView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EnergyPieView.h; sourceTree = "<group>"; };
-		884C750320A0110C000529DF /* EnergyPieView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EnergyPieView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,8 +80,6 @@
 			children = (
 				884C7500209FFF1D000529DF /* ZJCarInfoView.h */,
 				884C74FF209FFF1D000529DF /* ZJCarInfoView.m */,
-				884C750220A0110C000529DF /* EnergyPieView.h */,
-				884C750320A0110C000529DF /* EnergyPieView.m */,
 			);
 			path = CustomFile;
 			sourceTree = "<group>";
@@ -159,7 +154,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				884C750420A0110D000529DF /* EnergyPieView.m in Sources */,
 				884C74ED209FFEEF000529DF /* ViewController.m in Sources */,
 				884C74F8209FFEF1000529DF /* main.m in Sources */,
 				884C74EA209FFEEF000529DF /* AppDelegate.m in Sources */,
