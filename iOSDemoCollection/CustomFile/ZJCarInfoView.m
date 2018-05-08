@@ -209,6 +209,14 @@
 
 }
 
+/**
+ 设置动画
+
+ @param end 结束值
+ @param layer 动画图层
+ @param keyPath 动画路径
+ @param duration 动画时间
+ */
 -(void)setCircleShowPresent:(CGFloat)end layer:(CAShapeLayer*)layer path:(NSString*)keyPath duration:(CGFloat)duration{
     CABasicAnimation *pathAnima = [CABasicAnimation animationWithKeyPath:keyPath];
     pathAnima.duration = duration;
