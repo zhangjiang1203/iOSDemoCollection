@@ -8,15 +8,20 @@
 #import "ZJCarInfoView.h"
 #import <math.h>
 
-#define KInnerRadio 100
-#define KOutterRadio 120
-#define KTextRadio 140
-#define KPadding 10
-#define KStartColor [UIColor colorWithRed:255/255.0 green:214/255.0 blue:159/255.0 alpha:0.1]
-#define KEndColor [UIColor colorWithRed:224/255.0 green:197/255.0 blue:159/255.0 alpha:0.8]
-
 @interface ZJCarInfoView()
-@property (nonatomic, assign) CGFloat radius;           //半径
+{
+    CGFloat viewWidth;
+    CGFloat viewHeight;
+    CGFloat innerRadio; //内圆半径
+    CGFloat outterRadio;//外圆半径
+    CGFloat textRadio;  //文字半径
+    CGPoint viewCenter; //视图中心
+}
+
+/**
+ 显示的底部的路径
+ */
+@property (nonatomic, strong) CAShapeLayer *bottomLayer;
 
 /**
  显示可行驶公里数
@@ -37,14 +42,66 @@
     self = [super initWithFrame:frame];
     if (self) {
         self.backgroundColor = [UIColor clearColor];
+        viewWidth = self.bounds.size.width;
+        viewHeight = self.bounds.size.height;
+        CGFloat maxRadio = MIN(viewWidth, viewHeight)/2.0;
+        textRadio = maxRadio - 20;
+        outterRadio = maxRadio - 40;
+        innerRadio = maxRadio - 60;
+        viewCenter = CGPointMake(viewWidth/2.0, viewHeight/2.0);
     }
     return self;
 }
 
+-(void)drawRect:(CGRect)rect{
+    [super drawRect:rect];
+    if (self.topLayer == nil) {
+        [self addOutCircle];
+        [self customMyPath];
+    }
+}
+
+#pragma mark -设置颜色的懒加载
+-(UIColor *)startColor{
+    if (_startColor == nil) {
+        _startColor = [UIColor colorWithRed:255/255.0 green:214/255.0 blue:159/255.0 alpha:0.1];
+    }
+    return _startColor;
+}
+
+-(UIColor *)endColor{
+    if (_endColor == nil) {
+        _endColor = [UIColor colorWithRed:224/255.0 green:197/255.0 blue:159/255.0 alpha:0.8];
+    }
+    return _endColor;
+}
+
+-(UIColor *)dottedColor{
+    if (_dottedColor == nil) {
+        _dottedColor = [[UIColor blackColor]colorWithAlphaComponent:0.3];
+    }
+    return _dottedColor;
+}
+
+-(UIColor *)fullColor{
+    if (_fullColor == nil) {
+        _fullColor = [UIColor yellowColor];
+    }
+    return _fullColor;
+}
+
+-(UIColor *)textColor{
+    if (_textColor == nil) {
+        _textColor = [UIColor blackColor];
+    }
+    return _textColor;
+}
+
+#pragma mark -设置里程数和电量的显示
 -(void)setBattery:(CGFloat)battery{
     _battery = battery;
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self setCircleShowPresent:1 layer:self.maskLayer path:@"strokeStart" duration:2.5];
+        [self setCircleShowPresent:battery/360.0 layer:self.maskLayer path:@"strokeStart" duration:2.5];
     });
 }
 
@@ -57,28 +114,26 @@
 
 #pragma mark -添加显示的外环虚线和实线
 - (void)addOutCircle{
-    CAShapeLayer *bottomLayer = [CAShapeLayer layer];
-    bottomLayer.bounds = self.bounds;
-    bottomLayer.position = self.center;
-    bottomLayer.fillColor = [UIColor clearColor].CGColor;//填充颜色
-    bottomLayer.strokeColor = [[UIColor blackColor]colorWithAlphaComponent:0.3].CGColor;//线段颜色
-    bottomLayer.lineWidth = 1;
-    bottomLayer.lineJoin = kCALineJoinRound;
-    bottomLayer.lineDashPattern = @[@6,@2];
-    UIBezierPath *bottomPath = [UIBezierPath bezierPathWithArcCenter:self.center radius:KOutterRadio startAngle:0 endAngle:2*M_PI clockwise:YES];
-    bottomLayer.path = bottomPath.CGPath;
-    [self.layer addSublayer:bottomLayer];
+    self.bottomLayer = [CAShapeLayer layer];
+    self.bottomLayer.frame = CGRectMake(0, 0, viewWidth, viewHeight);
+    self.bottomLayer.fillColor = [UIColor clearColor].CGColor;//填充颜色
+    self.bottomLayer.strokeColor = self.dottedColor.CGColor;//线段颜色
+    self.bottomLayer.lineWidth = 1;
+    self.bottomLayer.lineJoin = kCALineJoinRound;
+    self.bottomLayer.lineDashPattern = @[@6,@2];
+    UIBezierPath *bottomPath = [UIBezierPath bezierPathWithArcCenter:viewCenter radius:outterRadio startAngle:0 endAngle:2*M_PI clockwise:YES];
+    self.bottomLayer.path = bottomPath.CGPath;
+    [self.layer addSublayer:self.bottomLayer];
     
     CAShapeLayer *topLayer = [CAShapeLayer layer];
-    topLayer.bounds = self.bounds;
-    topLayer.position = self.center;
+    topLayer.frame = CGRectMake(0, 0, viewWidth, viewHeight);
     topLayer.fillColor = [UIColor clearColor].CGColor;//填充颜色
-    topLayer.strokeColor = [UIColor yellowColor].CGColor;//线段颜色
+    topLayer.strokeColor = self.fullColor.CGColor;//线段颜色
     topLayer.lineWidth = 2;
     topLayer.strokeStart = 0;
     topLayer.strokeEnd = 0.2;
     topLayer.lineJoin = kCALineCapRound;
-    UIBezierPath *topPath = [UIBezierPath bezierPathWithArcCenter:self.center radius:KOutterRadio startAngle:M_PI_2 endAngle:1.5*M_PI clockwise:YES];
+    UIBezierPath *topPath = [UIBezierPath bezierPathWithArcCenter:viewCenter radius:outterRadio startAngle:M_PI_2 endAngle:1.5*M_PI clockwise:YES];
     topLayer.path = topPath.CGPath;
     self.topLayer = topLayer;
     [self.layer addSublayer:self.topLayer];
@@ -90,14 +145,14 @@
     for (int i = 0; i < 7; i++) {
         CGFloat degree = startDegree + i * singleAngle;
         UILabel *label = [UILabel new];
-        label.textColor = [UIColor blackColor];
+        label.textColor = self.textColor;
         label.font = [UIFont systemFontOfSize:10];
         label.bounds = CGRectMake(0, 0, 20, 20);
 
         //对应的center
         CGFloat cons = cosf(i*92/180.0+M_PI_2);
         CGFloat sins = sinf(i*92/180.0+M_PI_2);
-        CGPoint majorCenter = CGPointMake(self.center.x+KTextRadio*cons, self.center.y+KTextRadio*sins);
+        CGPoint majorCenter = CGPointMake(viewWidth/2.0+textRadio*cons, viewHeight/2.0+textRadio*sins);
         //减去label高度值得一半
         label.center = CGPointMake(majorCenter.x - 10*cons, majorCenter.y - 10*sins);
         //变换文字的方向
@@ -105,63 +160,49 @@
         label.text = tempArr[i];
         [self addSubview:label];
     }
-
-}
-
-#pragma mark -设置显示的内圈渐变视图
-- (void)drawRect:(CGRect)rect {
-    [super drawRect:rect];
-    if (self.topLayer == nil) {
-        [self addOutCircle];
-        [self customMyPath];
-    }
 }
 
 - (void)customMyPath{
     
-    const CGFloat *startColorComponents = CGColorGetComponents(KStartColor.CGColor); //RGB components
-    const CGFloat *endColorComponents = CGColorGetComponents(KEndColor.CGColor); //RGB components
+    const CGFloat *startColorComponents = CGColorGetComponents(self.startColor.CGColor); //RGB components
+    const CGFloat *endColorComponents = CGColorGetComponents(self.endColor.CGColor); //RGB components
     
     CGFloat R, G, B, A;
     //多个小扇形构造渐变的大扇形
-    for (int i = 0; i<= self.battery; i++) {
-        CGFloat ratio = i/self.battery;
+    for (int i = 0; i<= 360; i++) {
+        CGFloat ratio = i/360.0;
         R = startColorComponents[0] - (startColorComponents[0] - endColorComponents[0])*ratio;
         G = startColorComponents[1] - (startColorComponents[1] - endColorComponents[1])*ratio;
         B = startColorComponents[2] - (startColorComponents[2] - endColorComponents[2])*ratio;
         A = startColorComponents[3] - (startColorComponents[3] - endColorComponents[3])*ratio;
         UIColor *aColor = [UIColor colorWithRed:R green:G blue:B alpha:A];
 
-        CAShapeLayer *layer1 = [CAShapeLayer layer];
-        layer1.fillColor = aColor.CGColor;
-        layer1.strokeColor = [UIColor clearColor].CGColor;
-        layer1.lineWidth = 0;
-        layer1.strokeStart = 0;
-        layer1.strokeEnd = 0;
-        layer1.bounds = self.bounds;
-        layer1.position = self.center;
-        layer1.lineJoin = @"bevel";
+        CAShapeLayer *layer = [CAShapeLayer layer];
+        layer.frame = CGRectMake(0, 0, viewWidth, viewHeight);
+        layer.fillColor = aColor.CGColor;
+        layer.strokeColor = [UIColor clearColor].CGColor;
+        layer.lineWidth = 0;
+        layer.frame = CGRectMake(0, 0, viewWidth, viewHeight);
         
         UIBezierPath *path = [UIBezierPath bezierPath];
-        [path addArcWithCenter:self.center radius:KInnerRadio startAngle:i*M_PI/180.0-M_PI_2 endAngle: (i+1)*M_PI/180.0-M_PI_2 clockwise:YES];
-        [path addLineToPoint:self.center];
+        [path addArcWithCenter:viewCenter radius:innerRadio startAngle:i*M_PI/180.0-M_PI_2 endAngle: (i+1)*M_PI/180.0-M_PI_2 clockwise:YES];
+        [path addLineToPoint:viewCenter];
         
-        layer1.path = [path CGPath];
-        [self.layer addSublayer:layer1];
+        layer.path = [path CGPath];
+        [self.layer addSublayer:layer];
     }
     
     //构造一个大的扇形覆盖创建的扇形
     _maskLayer = [CAShapeLayer layer];
+    _maskLayer.frame = CGRectMake(0, 0, viewWidth, viewHeight);
     _maskLayer.fillColor = [UIColor clearColor].CGColor;
     _maskLayer.strokeColor = [UIColor whiteColor].CGColor;
-    _maskLayer.lineWidth = 100;
+    _maskLayer.lineWidth = innerRadio;
     _maskLayer.strokeStart = 0;
     _maskLayer.strokeEnd = 1.0;
-    _maskLayer.bounds = self.bounds;
-    _maskLayer.position = self.center;
     
     UIBezierPath *maskPath = [UIBezierPath bezierPath];
-    [maskPath addArcWithCenter:self.center radius:50 startAngle:-M_PI_2 endAngle: (self.battery+1)*M_PI/180.0-M_PI_2 clockwise:YES];
+    [maskPath addArcWithCenter:viewCenter radius:innerRadio/2.0 startAngle:-M_PI_2 endAngle: (360+1)*M_PI/180.0-M_PI_2 clockwise:YES];
 //    [maskPath addLineToPoint:self.center];
     _maskLayer.path = [maskPath CGPath];
     [self.layer addSublayer:_maskLayer];
